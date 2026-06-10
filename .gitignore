@@ -1,0 +1,7 @@
+venv/
+__pycache__/
+*.pyc
+instance/batikcert.db
+instance/secret.key
+.idea/
+.vscode/

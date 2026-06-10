@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+
+{% block title %}Hasil Verifikasi Kriptografi | BatikCert Secure{% endblock %}
+
+{% block content %}
+<div class="verify-container">
+    {% if success %}
+        <!-- Verifikasi Sukses (Pertama kali) -->
+        <div class="card card-batik text-center p-5 border-top-0 border-bottom" style="border-bottom: 5px solid #2ec4b6 !important;">
+            <div class="mb-4">
+                <i class="fa-solid fa-circle-check verify-icon-success"></i>
+            </div>
+            
+            <h2 class="text-success fw-bold font-serif mb-2">✓ Karya Batik Asli</h2>
+            <h4 class="text-muted fw-semibold mb-4">✓ Sertifikat Valid</h4>
+            
+            <div class="alert alert-success d-flex align-items-center justify-content-center border-0 py-3 mb-4" style="background-color: rgba(46, 196, 182, 0.1);">
+                <i class="fa-solid fa-shield-check fa-lg me-2 text-success"></i>
+                <div class="text-start text-success small">
+                    <strong>Verifikasi Kriptografis Berhasil.</strong> Token telah diverifikasi sekali dan sekarang ditandai sebagai <strong>USED</strong> untuk mencegah penyalinan sertifikat.
+                </div>
+            </div>
+
+            <!-- Detail Karya yang Terverifikasi -->
+            <div class="text-start border-top pt-4">
+                <h5 class="text-primary-dark fw-bold mb-3"><i class="fa-solid fa-scroll me-2"></i>Detail Karya Batik</h5>
+                <div class="row g-2 small">
+                    <div class="col-5 text-muted">Nama Karya:</div>
+                    <div class="col-7 fw-semibold text-dark-bg">{{ art.nama_karya }}</div>
+                    
+                    <div class="col-5 text-muted">Desainer:</div>
+                    <div class="col-7 fw-semibold text-dark-bg">{{ art.desainer }}</div>
+                    
+                    <div class="col-5 text-muted">Tanggal Dibuat:</div>
+                    <div class="col-7 fw-semibold text-dark-bg">{{ art.tanggal_dibuat }}</div>
+                    
+                    <div class="col-5 text-muted">Kategori:</div>
+                    <div class="col-7"><span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25 px-2 py-1 rounded">{{ art.kategori }}</span></div>
+                    
+                    <div class="col-5 text-muted">SHA-256 Fingerprint:</div>
+                    <div class="col-7 text-break font-monospace text-primary-dark">{{ art.digest_sha256 }}</div>
+                </div>
+            </div>
+            
+            <div class="mt-5">
+                <a href="{{ url_for('index') }}" class="btn btn-batik-primary px-4"><i class="fa-solid fa-house me-2"></i>Kembali ke Dashboard</a>
+            </div>
+        </div>
+    {% else %}
+        <!-- Verifikasi Ditolak (Token Sudah Pernah Digunakan / Tidak Valid) -->
+        <div class="card card-batik text-center p-5 border-top-0 border-bottom" style="border-bottom: 5px solid #e63946 !important;">
+            <div class="mb-4">
+                <i class="fa-solid fa-circle-xmark verify-icon-error"></i>
+            </div>
+            
+            <h2 class="text-danger fw-bold font-serif mb-2">✗ QR Code Sudah Pernah Digunakan</h2>
+            <h4 class="text-muted fw-semibold mb-4">✗ Verifikasi Ditolak</h4>
+            
+            <div class="alert alert-danger d-flex align-items-center justify-content-center border-0 py-3 mb-4" style="background-color: rgba(230, 57, 70, 0.1);">
+                <i class="fa-solid fa-circle-exclamation fa-lg me-2 text-danger"></i>
+                <div class="text-start text-danger small">
+                    <strong>Peringatan Keamanan!</strong> Sertifikat ini telah diverifikasi sebelumnya atau QR Code telah disalin secara ilegal. Verifikasi hanya berlaku satu kali untuk menjamin orisinalitas fisik/digital.
+                </div>
+            </div>
+
+            {% if art %}
+                <!-- Jika token valid tapi sudah used, tampilkan info karya untuk referensi -->
+                <div class="text-start border-top pt-4">
+                    <h5 class="text-primary-dark fw-bold mb-3"><i class="fa-solid fa-circle-info me-2"></i>Referensi Karya Terkait</h5>
+                    <div class="row g-2 small">
+                        <div class="col-5 text-muted">Nama Karya:</div>
+                        <div class="col-7 fw-semibold text-dark-bg">{{ art.nama_karya }}</div>
+                        
+                        <div class="col-5 text-muted">Desainer:</div>
+                        <div class="col-7 fw-semibold text-dark-bg">{{ art.desainer }}</div>
+
+                        <div class="col-5 text-muted">SHA-256 Fingerprint:</div>
+                        <div class="col-7 text-break font-monospace text-primary-dark">{{ art.digest_sha256 }}</div>
+                    </div>
+                </div>
+            {% endif %}
+
+            <div class="mt-5">
+                <a href="{{ url_for('index') }}" class="btn btn-batik-primary px-4"><i class="fa-solid fa-house me-2"></i>Kembali ke Dashboard</a>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

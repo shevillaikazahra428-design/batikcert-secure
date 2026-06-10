@@ -1,0 +1,7 @@
+Flask==3.0.3
+cryptography>=42.0.8
+qrcode==7.4.2
+Pillow==10.3.0
+weasyprint==62.1
+xhtml2pdf==0.2.17
+gunicorn==21.2.0

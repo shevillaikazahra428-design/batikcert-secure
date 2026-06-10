@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+
+{% block title %}Sertifikat Keaslian - {{ art.nama_karya }} | BatikCert Secure{% endblock %}
+
+{% block extra_head %}
+<style>
+    /* Print & Certificate Custom Styling */
+    .cert-outer-wrapper {
+        max-width: 1000px;
+        margin: 0 auto;
+    }
+    
+    /* Tombol download panel */
+    .action-panel {
+        background-color: #ffffff;
+        border-radius: 8px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        padding: 15px;
+        margin-bottom: 25px;
+    }
+
+    /* Print media overrides */
+    @media print {
+        .navbar-batik, .action-panel, footer, .btn {
+            display: none !important;
+        }
+        body {
+            background-color: #ffffff !important;
+            padding: 0 !important;
+            margin: 0 !important;
+        }
+        .cert-outer-wrapper {
+            max-width: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+        .cert-container {
+            border: 15px double #8C6239 !important;
+            box-shadow: none !important;
+            page-break-inside: avoid;
+        }
+    }
+</style>
+
+{% if css_content %}
+<style>
+    /* Injected CSS content to prevent deadlocks in WeasyPrint */
+    {{ css_content|safe }}
+</style>
+{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="cert-outer-wrapper">
+    <!-- Panel Aksi (Hanya muncul di Browser) -->
+    <div class="action-panel d-flex justify-content-between align-items-center d-print-none">
+        <div>
+            <a href="{{ url_for('index') }}" class="btn btn-batik-secondary">
+                <i class="fa-solid fa-arrow-left me-2"></i>Kembali ke Dashboard
+            </a>
+        </div>
+        <div>
+            <span class="me-3 text-muted">
+                Status: 
+                {% if art.used == 0 %}
+                    <span class="badge-valid"><i class="fa-solid fa-shield-halved me-1"></i>Valid (Belum Pernah Diverifikasi)</span>
+                {% else %}
+                    <span class="badge-used"><i class="fa-solid fa-ban me-1"></i>Used (Sudah Pernah Diverifikasi)</span>
+                {% endif %}
+            </span>
+            <a href="{{ url_for('download_pdf', art_id=art.id) }}" class="btn btn-batik-primary px-4">
+                <i class="fa-solid fa-download me-2"></i>Unduh Sertifikat (PDF)
+            </a>
+        </div>
+    </div>
+
+    <!-- Tampilan Sertifikat -->
+    <div class="cert-container my-4">
+        <!-- Batik Decorative Watermark in background -->
+        <div class="cert-watermark">
+            <i class="fa-solid fa-stamp" style="font-size: 400px; color: #8C6239;"></i>
+        </div>
+
+        <div class="cert-content text-center">
+            <!-- Header Sertifikat -->
+            <div class="cert-header">
+                <div class="row align-items-center">
+                    <div class="col-md-2 text-md-start mb-3 mb-md-0">
+                        <i class="fa-solid fa-stamp fa-4x text-primary-color"></i>
+                    </div>
+                    <div class="col-md-8 text-center">
+                        <h4 class="mb-1 fw-bold text-primary-dark letter-spacing-1">BATIKCERT SECURE</h4>
+                        <div class="cert-subtitle">Sertifikat Keaslian Karya Batik Digital</div>
+                    </div>
+                    <div class="col-md-2 text-md-end text-muted small">
+                        <strong>Nomor Sertifikat:</strong><br>
+                        <span class="text-primary-dark fw-bold">BCS/{{ art.tanggal_dibuat.replace('-', '') }}/{{ "%04d"|format(art.id) }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <p class="font-serif italic text-muted my-3" style="font-size: 1.2rem;">Dengan ini menerangkan dan menjamin keaslian karya batik digital berikut:</p>
+
+            <!-- Nama Karya -->
+            <h1 class="font-serif text-primary-dark my-4 fw-bold cert-title" style="font-size: 2.8rem; border-bottom: 1px dashed var(--primary-light); display: inline-block; padding-bottom: 5px;">
+                {{ art.nama_karya }}
+            </h1>
+
+            <!-- Detail Karya -->
+            <div class="row justify-content-center g-4 my-3 text-start">
+                <div class="col-sm-4 text-center">
+                    <div class="cert-meta-label">Desainer / Pencipta</div>
+                    <div class="cert-meta-value"><i class="fa-solid fa-user-pen me-2 text-primary-light"></i>{{ art.desainer }}</div>
+                </div>
+                <div class="col-sm-4 text-center">
+                    <div class="cert-meta-label">Kategori Batik</div>
+                    <div class="cert-meta-value"><i class="fa-solid fa-tags me-2 text-primary-light"></i>{{ art.kategori }}</div>
+                </div>
+                <div class="col-sm-4 text-center">
+                    <div class="cert-meta-label">Tanggal Terdaftar</div>
+                    <div class="cert-meta-value"><i class="fa-solid fa-calendar-check me-2 text-primary-light"></i>{{ art.tanggal_dibuat }}</div>
+                </div>
+            </div>
+
+            <!-- Fingerprint SHA-256 -->
+            <div class="row justify-content-center my-4 text-start">
+                <div class="col-md-10">
+                    <div class="cert-meta-label text-center mb-1">SHA-256 Digital Fingerprint (Integritas Data)</div>
+                    <div class="cert-hash text-center">
+                        <i class="fa-solid fa-fingerprint me-2 text-primary-color"></i>{{ art.digest_sha256 }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bagian Bawah: QR Code & Tanda Tangan -->
+            <div class="row align-items-center justify-content-between mt-5">
+                <div class="col-md-4 text-md-start text-center mb-4 mb-md-0">
+                    <div class="cert-qr-container">
+                        {% if qr_base64 %}
+                            <!-- Gunakan base64 untuk PDF rendering bebas deadlock -->
+                            <img src="data:image/png;base64,{{ qr_base64 }}" alt="QR Code Verifikasi">
+                        {% else %}
+                            <!-- Fallback di browser -->
+                            <img src="{{ url_for('get_qrcode', token=art.encrypted_token) }}" alt="QR Code Verifikasi">
+                        {% endif %}
+                    </div>
+                    <div class="mt-2 text-muted" style="font-size: 0.75rem; max-width: 160px; line-height: 1.2;">
+                        Pindai QR Code untuk memverifikasi keaslian karya secara kriptografis (One-Time Verification).
+                    </div>
+                </div>
+
+                <div class="col-md-4 text-md-end text-center">
+                    <div class="d-inline-block text-center" style="width: 200px;">
+                        <div class="cert-meta-label">Tanggal Penerbitan</div>
+                        <div class="fw-semibold mb-5 text-dark-bg">{{ tgl_penerbitan }}</div>
+                        <div class="cert-signature-title">BatikCert Authority</div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}

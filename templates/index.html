@@ -1,0 +1,290 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard | BatikCert Secure{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h2 class="font-serif text-dark-bg"><i class="fa-solid fa-cubes me-2 text-primary-color"></i>Dashboard Registrasi Karya Batik</h2>
+        <p class="text-muted">Sistem terenkripsi untuk mengamankan sertifikat keaslian karya batik digital Anda.</p>
+    </div>
+    <div class="col-auto d-flex align-items-center">
+        <button class="btn btn-batik-primary px-4 py-2" data-bs-toggle="modal" data-bs-target="#tambahModal">
+            <i class="fa-solid fa-plus me-2"></i>Tambah Karya Baru
+        </button>
+    </div>
+</div>
+
+<!-- Statistik Panel -->
+<div class="row g-3 mb-4">
+    <!-- Total Karya -->
+    <div class="col-md-3">
+        <div class="card card-batik h-100 p-3 d-flex flex-column justify-content-center">
+            <div class="d-flex align-items-center">
+                <div class="bg-primary text-white p-3 rounded-circle me-3" style="background: linear-gradient(135deg, var(--primary-color), var(--primary-dark)) !important;">
+                    <i class="fa-solid fa-scroll fa-2x"></i>
+                </div>
+                <div>
+                    <h6 class="text-muted mb-0">Total Karya</h6>
+                    <h3 class="mb-0 fw-bold">{{ total_artworks }}</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Kategori Stats -->
+    {% for cat, count in category_stats.items() %}
+    <div class="col-md-3">
+        <div class="card card-batik h-100 p-3 border-top-0 border-start" style="border-left: 4px solid var(--primary-light) !important;">
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <h6 class="text-muted mb-1">{{ cat }}</h6>
+                    <h4 class="mb-0 fw-bold">{{ count }}</h4>
+                </div>
+                <div class="text-muted">
+                    {% if "Geometris" in cat %}
+                        <i class="fa-solid fa-bezier-curve fa-2x text-opacity-25"></i>
+                    {% elif "Islami" in cat or "Arabesque" in cat %}
+                        <i class="fa-solid fa-mosque fa-2x text-opacity-25"></i>
+                    {% elif "Fraktal" in cat %}
+                        <i class="fa-solid fa-chart-line fa-2x text-opacity-25"></i>
+                    {% else %}
+                        <i class="fa-solid fa-palette fa-2x text-opacity-25"></i>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Tabel Karya Batik -->
+<div class="card shadow-sm border-0">
+    <div class="card-header bg-white py-3">
+        <h5 class="mb-0 text-primary-dark fw-bold"><i class="fa-solid fa-list-check me-2"></i>Daftar Karya Batik Terdaftar</h5>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover table-striped mb-0 align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-4">No</th>
+                        <th>Nama Karya</th>
+                        <th>Desainer</th>
+                        <th>Tanggal Dibuat</th>
+                        <th>Kategori</th>
+                        <th>Status</th>
+                        <th class="text-end pe-4">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if artworks %}
+                        {% for art in artworks %}
+                        <tr>
+                            <td class="ps-4 fw-bold text-muted">{{ loop.index }}</td>
+                            <td>
+                                <span class="fw-semibold text-dark-bg">{{ art.nama_karya }}</span>
+                            </td>
+                            <td>{{ art.desainer }}</td>
+                            <td>{{ art.tanggal_dibuat }}</td>
+                            <td>
+                                <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25 px-2.5 py-1.5 rounded">{{ art.kategori }}</span>
+                            </td>
+                            <td>
+                                {% if art.used == 0 %}
+                                    <span class="badge-valid"><i class="fa-solid fa-shield-halved me-1"></i>Valid</span>
+                                {% else %}
+                                    <span class="badge-used"><i class="fa-solid fa-ban me-1"></i>Used</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end pe-4">
+                                <div class="btn-group" role="group">
+                                    <a href="{{ url_for('preview_certificate', art_id=art.id) }}" class="btn btn-sm btn-outline-secondary" title="Preview Sertifikat">
+                                        <i class="fa-solid fa-eye me-1"></i> Preview
+                                    </a>
+                                    <a href="{{ url_for('download_pdf', art_id=art.id) }}" class="btn btn-sm btn-outline-primary" title="Download PDF">
+                                        <i class="fa-solid fa-file-pdf me-1"></i> PDF
+                                    </a>
+                                    <button class="btn btn-sm btn-outline-warning" 
+                                            data-bs-toggle="modal" 
+                                            data-bs-target="#editModal{{ art.id }}" 
+                                            title="Edit Karya">
+                                        <i class="fa-solid fa-pen-to-square"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-danger" 
+                                            data-bs-toggle="modal" 
+                                            data-bs-target="#hapusModal{{ art.id }}" 
+                                            title="Hapus Karya">
+                                        <i class="fa-solid fa-trash"></i>
+                                    </button>
+                                </div>
+
+                                <!-- Modal Edit Karya -->
+                                <div class="modal fade text-start" id="editModal{{ art.id }}" tabindex="-1" aria-hidden="true">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title fw-bold"><i class="fa-solid fa-pen-to-square me-2 text-warning"></i>Edit Karya Batik</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                            </div>
+                                            <form action="{{ url_for('edit_artwork', art_id=art.id) }}" method="POST">
+                                                <div class="modal-body">
+                                                    <div class="mb-3">
+                                                        <label class="form-label fw-semibold">Nama Karya</label>
+                                                        <input type="text" class="form-control" name="nama_karya" value="{{ art.nama_karya }}" required>
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label class="form-label fw-semibold">Desainer</label>
+                                                        <input type="text" class="form-control" name="desainer" value="{{ art.desainer }}" required>
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label class="form-label fw-semibold">Tanggal Dibuat</label>
+                                                        <input type="date" class="form-control" name="tanggal_dibuat" value="{{ art.tanggal_dibuat }}" required>
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label class="form-label fw-semibold">Kategori</label>
+                                                        <select class="form-select" name="kategori" required>
+                                                            <option value="Batik Geometris" {% if art.kategori == 'Batik Geometris' %}selected{% endif %}>Batik Geometris</option>
+                                                            <option value="Batik Islami" {% if art.kategori == 'Batik Islami' %}selected{% endif %}>Batik Islami</option>
+                                                            <option value="Batik Fraktal" {% if art.kategori == 'Batik Fraktal' %}selected{% endif %}>Batik Fraktal</option>
+                                                            <option value="Lainnya" {% if art.kategori not in ['Batik Geometris', 'Batik Islami', 'Batik Fraktal'] %}selected{% endif %}>Lainnya (Tulis manual di bawah)</option>
+                                                        </select>
+                                                    </div>
+                                                    <div class="mb-3" id="customKategoriDiv{{ art.id }}">
+                                                        <label class="form-label fw-semibold">Tulis Kategori Kustom (Jika memilih 'Lainnya')</label>
+                                                        <input type="text" class="form-control" name="custom_kategori" placeholder="Contoh: Batik Pedalaman" value="{{ art.kategori if art.kategori not in ['Batik Geometris', 'Batik Islami', 'Batik Fraktal'] else '' }}">
+                                                    </div>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                                                    <button type="submit" class="btn btn-warning text-white fw-semibold">Simpan Perubahan</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Modal Hapus Karya -->
+                                <div class="modal fade text-start" id="hapusModal{{ art.id }}" tabindex="-1" aria-hidden="true">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title fw-bold text-danger"><i class="fa-solid fa-triangle-exclamation me-2"></i>Konfirmasi Hapus</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <p>Apakah Anda yakin ingin menghapus karya batik <strong>{{ art.nama_karya }}</strong>?</p>
+                                                <p class="text-danger small mb-0"><i class="fa-solid fa-circle-info me-1"></i>Tindakan ini tidak dapat dibatalkan dan semua data verifikasi terkait akan dihapus.</p>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                                                <form action="{{ url_for('delete_artwork', art_id=art.id) }}" method="POST" style="display:inline;">
+                                                    <button type="submit" class="btn btn-danger fw-semibold">Ya, Hapus</button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="7" class="text-center py-5">
+                                <i class="fa-regular fa-folder-open fa-3x text-muted mb-3"></i>
+                                <p class="text-muted mb-0">Belum ada karya batik yang terdaftar. Klik <strong>Tambah Karya Baru</strong> untuk memulai.</p>
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Tambah Karya -->
+<div class="modal fade" id="tambahModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content text-start">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold"><i class="fa-solid fa-plus me-2 text-primary-color"></i>Registrasi Karya Batik Baru</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="{{ url_for('add_artwork') }}" method="POST">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Nama Karya</label>
+                        <input type="text" class="form-control" name="nama_karya" placeholder="Contoh: Mega Mendung Modern" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Desainer</label>
+                        <input type="text" class="form-control" name="desainer" placeholder="Contoh: Ahmad Wijaya" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Tanggal Dibuat</label>
+                        <input type="date" class="form-control" name="tanggal_dibuat" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Kategori</label>
+                        <select class="form-select" id="addKategoriSelect" name="kategori" required>
+                            <option value="Batik Geometris" selected>Batik Geometris</option>
+                            <option value="Batik Islami">Batik Islami</option>
+                            <option value="Batik Fraktal">Batik Fraktal</option>
+                            <option value="Lainnya">Lainnya (Tulis manual di bawah)</option>
+                        </select>
+                    </div>
+                    <div class="mb-3 d-none" id="addCustomKategoriDiv">
+                        <label class="form-label fw-semibold">Tulis Kategori Kustom</label>
+                        <input type="text" class="form-control" id="addCustomKategori" name="custom_kategori" placeholder="Contoh: Batik Pesisir">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-batik-primary px-4 fw-semibold">Daftarkan Karya</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Logic untuk menampilkan/menyembunyikan input kustom pada Tambah Karya
+    const addSelect = document.getElementById('addKategoriSelect');
+    const addCustomDiv = document.getElementById('addCustomKategoriDiv');
+    const addCustomInput = document.getElementById('addCustomKategori');
+
+    addSelect.addEventListener('change', function() {
+        if (this.value === 'Lainnya') {
+            addCustomDiv.classList.remove('d-none');
+            addCustomInput.setAttribute('required', 'required');
+        } else {
+            addCustomDiv.classList.add('d-none');
+            addCustomInput.removeAttribute('required');
+            addCustomInput.value = '';
+        }
+    });
+
+    // Event listener untuk modal edit yang ter-generate dinamis
+    {% for art in artworks %}
+    (function() {
+        const editSelect = document.querySelector('#editModal{{ art.id }} select[name="kategori"]');
+        const editCustomDiv = document.getElementById('customKategoriDiv{{ art.id }}');
+        const editCustomInput = document.querySelector('#editModal{{ art.id }} input[name="custom_kategori"]');
+
+        function toggleEditCustom() {
+            if (editSelect.value === 'Lainnya') {
+                editCustomDiv.classList.remove('d-none');
+                editCustomInput.setAttribute('required', 'required');
+            } else {
+                editCustomDiv.classList.add('d-none');
+                editCustomInput.removeAttribute('required');
+            }
+        }
+
+        editSelect.addEventListener('change', toggleEditCustom);
+        // Jalankan sekali saat inisialisasi
+        toggleEditCustom();
+    })();
+    {% endfor %}
+</script>
+{% endblock %}
