@@ -1,0 +1,15 @@
+{
+  "$schema": "https://schema.railpack.com",
+  "buildAptPackages": [
+    "libcairo2-dev",
+    "pkg-config"
+  ],
+  "deploy": {
+    "aptPackages": [
+      "libcairo2",
+      "libpango-1.0-0",
+      "libpangocairo-1.0-0",
+      "libgdk-pixbuf-2.0-0"
+    ]
+  }
+}
